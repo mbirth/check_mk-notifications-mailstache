@@ -27,10 +27,31 @@
     <td>{{HOSTOUTPUT}}</td>
 </tr>
 {{#LONGHOSTOUTPUT}}
-<tr class="odd0">
-    <td class="left">Long output</td>
-    <td>{{{LONGHOSTOUTPUT}}}</td>
-</tr>
+    <tr class="odd0">
+        <td class="left">Long output</td>
+        <td>{{{LONGHOSTOUTPUT}}}</td>
+    </tr>
 {{/LONGHOSTOUTPUT}}
+{{#NOTIFICATIONCOMMENT}}
+    <tr>
+        <th colspan="2">Comment</th>
+    </tr>
+    <tr class="odd0">
+        <td class="left">Text</td>
+        <td>{{NOTIFICATIONCOMMENT}}</td>
+    </tr>
+    <tr class="even0">
+        <td class="left">Author</td>
+        <td>{{NOTIFICATIONAUTHORALIAS}} ({{NOTIFICATIONAUTHORNAME}})</td>
+    </tr>
+{{/NOTIFICATIONCOMMENT}}
+{{#HOSTCUSTOMNOTES}}
+    <tr>
+        <th colspan="2">Custom Host Notes</th>
+    </tr>
+    <tr class="odd0">
+        <td colspan="2">{{{HOSTCUSTOMNOTES}}}</td>
+    </tr>
+{{/HOSTCUSTOMNOTES}}
 {{{GRAPH_CODE}}}
 </table>{{> foot_html}}

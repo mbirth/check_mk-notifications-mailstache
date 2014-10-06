@@ -11,6 +11,14 @@
     <td class=left>Address</td>
     <td>{{HOSTADDRESS}}</td>
 </tr>
+{{#HOSTCUSTOMNOTES}}
+    <tr>
+        <th colspan="2">Custom Host Notes</th>
+    </tr>
+    <tr class="odd0">
+        <td colspan="2">{{{HOSTCUSTOMNOTES}}}</td>
+    </tr>
+{{/HOSTCUSTOMNOTES}}
 <tr class="odd0">
     <td class=left>Service description</td>
     <td>{{{LINKEDSERVICEDESC}}}{{#SERVICENOTESURL}} [<a href="{{SERVICENOTESURL}}">More info</a>]{{/SERVICENOTESURL}}</td>
@@ -49,5 +57,13 @@
         <td>{{NOTIFICATIONAUTHORALIAS}} ({{NOTIFICATIONAUTHORNAME}})</td>
     </tr>
 {{/NOTIFICATIONCOMMENT}}
+{{#SERVICECUSTOMNOTES}}
+    <tr>
+        <th colspan="2">Custom Service Notes</th>
+    </tr>
+    <tr class="odd0">
+        <td colspan="2">{{{SERVICECUSTOMNOTES}}}</td>
+    </tr>
+{{/SERVICECUSTOMNOTES}}
 {{{GRAPH_CODE}}}
 {{> foot_html}}

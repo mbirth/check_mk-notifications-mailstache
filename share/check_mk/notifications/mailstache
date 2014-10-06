@@ -118,6 +118,71 @@ def fetch_graph(context, source, view = 1):
 
     return graph
 
+# Borrowed from share/check_mk/web/plugins/views/painters.py
+def notes_matching_pattern_entries(dirs, item):
+    from fnmatch import fnmatch
+    matching = []
+    for dir in dirs:
+        if os.path.isdir(dir):
+            entries = filter(lambda d: d[0] != '.', os.listdir(dir))
+            entries.sort()
+            entries.reverse()
+            for pattern in entries:
+                if pattern[0] == '.':
+                    continue
+                if fnmatch(item, pattern):
+                    matching.append(dir + "/" + pattern)
+    return matching
+
+# Borrowed and modified from share/check_mk/web/plugins/views/painters.py
+def get_custom_notes(context):
+    host = context['HOSTNAME']
+    svc = context.get('SERVICEDESC')
+
+    files_svc = []
+    if svc:
+        notes_dir = context["OMD_ROOT"] + "/etc/check_mk/notes/services"
+        dirs = notes_matching_pattern_entries([notes_dir], host)
+        files_svc = notes_matching_pattern_entries(dirs, svc)
+        files_svc.sort()
+        files_svc.reverse()
+
+    dirs = [ context["OMD_ROOT"] + "/etc/check_mk/notes/hosts" ]
+    files_host = notes_matching_pattern_entries(dirs, host)
+    files_host.sort()
+    files_host.reverse()
+
+    def replace_tags(text):
+        base_url = ""
+        if context.get('PARAMETER_2'):
+            base_url = context['PARAMETER_2'].rstrip('/')
+        return text\
+            .replace('$URL_PREFIX$',     base_url)\
+            .replace('$SITE$',           context['OMD_SITE'])\
+            .replace('$HOSTNAME$',       host)\
+            .replace('$HOSTNAME_LOWER$', host.lower())\
+            .replace('$HOSTNAME_UPPER$', host.upper())\
+            .replace('$HOSTNAME_TITLE$', host[0].upper() + host[1:].lower())\
+            .replace('$HOSTADDRESS$',    context['HOSTADDRESS'])\
+            .replace('$SERVICEOUTPUT$',  context.get('SERVICEOUTPUT', ""))\
+            .replace('$HOSTOUTPUT$',     context.get('HOSTOUTPUT', ""))\
+            .replace('$SERVICEDESC$',    context.get('SERVICEDESC', ""))
+
+    contents_host = []
+    contents_svc  = []
+
+    for f in files_host:
+        contents_host.append(replace_tags(unicode(file(f).read(), "utf-8").strip()))
+
+    for f in files_svc:
+        contents_svc.append(replace_tags(unicode(file(f).read(), "utf-8").strip()))
+
+    result = { "HOST": [], "SERVICE": [] }
+    result["HOST"] = "\n<hr />\n".join(contents_host)
+    result["SERVICE"] = "\n<hr />\n".join(contents_svc)
+
+    return result
+
 def main():
     # gather all options from env
     context = dict([
@@ -130,6 +195,10 @@ def main():
     context['HOSTNOTESURL']    = os.environ.get("NAGIOS_HOSTNOTESURL")
     context['SERVICENOTES']    = os.environ.get("NAGIOS_SERVICENOTES")
     context['SERVICENOTESURL'] = os.environ.get("NAGIOS_SERVICENOTESURL")
+
+    notes = get_custom_notes(context)
+    context['HOSTCUSTOMNOTES'] = notes["HOST"]
+    context['SERVICECUSTOMNOTES'] = notes["SERVICE"]
 
     # Fetch graphs for this object. It first tries to detect how many sources
     # are available for this object. Then it loops through all sources and
