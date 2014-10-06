@@ -1,0 +1,202 @@
+#!/usr/bin/env python
+# Templated Emails with included Graphs
+# This script creates a very beautiful mail in multipart format with
+# attached graphs and such neat stuff. Sweet!
+#
+# Argument 1: Full system path to the pnp4nagios index.php for fetching
+#             the graphs. Usually auto configured in OMD.
+# Argument 2: HTTP-URL-Prefix to open multisite. When provided, several
+#             links are added to the mail.
+
+import os, re, sys, subprocess, pystache
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.application import MIMEApplication
+from email.mime.image import MIMEImage
+
+opt_debug = '-d' in sys.argv
+
+class GraphException(Exception):
+    pass
+
+def prepare_contents(context):
+    renderer = pystache.Renderer(search_dirs=[
+        context["OMD_ROOT"] + "/local/share/check_mk/notifications/mailstache_templates",
+        context["OMD_ROOT"] + "/share/check_mk/notifications/mailstache_templates"
+    ])
+
+    if context['WHAT'] == 'HOST':
+        tmpl_subj = renderer.load_template("host_subject")
+        tmpl_txt  = renderer.load_template("host_txt")
+        tmpl_html = renderer.load_template("host_html")
+    else:
+        tmpl_subj = renderer.load_template("service_subject")
+        tmpl_txt  = renderer.load_template("service_txt")
+        tmpl_html = renderer.load_template("service_html")
+
+    context["SUBJECT"] = renderer.render(tmpl_subj, context)
+
+    # Render text
+    result_txt  = renderer.render(tmpl_txt, context)
+
+    # Change newlines to HTML
+    context["LONGHOSTOUTPUT"]    = context["LONGHOSTOUTPUT"].replace("\\n", "<br />")
+    context["LONGSERVICEOUTPUT"] = context["LONGSERVICEOUTPUT"].replace("\\n", "<br />")
+
+    # Render HTML
+    result_html = renderer.render(tmpl_html, context)
+
+    return result_txt, result_html
+
+def multipart_mail(target, subject, content_txt, content_html, attach = []):
+    m = MIMEMultipart('related', _charset='utf-8')
+
+    alt = MIMEMultipart('alternative')
+
+    # The plain text part
+    txt = MIMEText(content_txt, 'plain', _charset='utf-8')
+    alt.attach(txt)
+
+    # The html text part
+    html = MIMEText(content_html, 'html', _charset='utf-8')
+    alt.attach(html)
+
+    m.attach(alt)
+
+    # Add all attachments
+    for what, name, contents, how in attach:
+        if what == 'img':
+            part = MIMEImage(contents, name = name)
+        else:
+            part = MIMEApplication(contents, name = name)
+        part.add_header('Content-ID', '<%s>' % name)
+        # how must be inline or attachment
+        part.add_header('Content-Disposition', how, filename = name)
+        m.attach(part)
+
+    m['Subject'] = subject
+    m['To']      = target
+
+    return m
+
+def send_mail(m, target):
+    p = subprocess.Popen(["/usr/sbin/sendmail", "-i", target ], stdin = subprocess.PIPE)
+    p.communicate(m.as_string())
+    return True
+
+def fetch_pnp_data(context, params):
+    try:
+        # Autodetect the path in OMD environments
+        path = "%s/share/pnp4nagios/htdocs/index.php" % context['OMD_ROOT']
+        php_save_path = "-d session.save_path=%s/tmp/php/session" % context['OMD_ROOT']
+    except:
+        # Non-omd environment - use plugin argument 1
+        path = context.get('PARAMETER_1', '')
+        php_save_path = "" # Using default path
+
+    if not os.path.exists(path):
+        raise GraphException('Unable to locate pnp4nagios index.php (%s)' % path)
+
+    return os.popen('REMOTE_USER="%s" php %s %s "%s"' % (context['CONTACTNAME'], php_save_path, path, params)).read()
+
+def fetch_num_sources(context):
+    svc_desc = context['WHAT'] == 'HOST' and '_HOST_' or context['SERVICEDESC']
+    infos = fetch_pnp_data(context, '/json?host=%s&srv=%s&view=0' %
+                                     (context['HOSTNAME'], svc_desc))
+    if not infos.startswith('[{'):
+        raise GraphException('Unable to fetch graph infos, got: "%s"' % infos)
+
+    return infos.count('source=')
+
+def fetch_graph(context, source, view = 1):
+    svc_desc = context['WHAT'] == 'HOST' and '_HOST_' or context['SERVICEDESC']
+    graph = fetch_pnp_data(context, '/image?host=%s&srv=%s&view=%d&source=%d' %
+                                    (context['HOSTNAME'], svc_desc, view, source))
+
+    if graph[:8] != '\x89PNG\r\n\x1a\n':
+        raise GraphException('Unable to fetch the graph, got: "%s"' % graph)
+
+    return graph
+
+def main():
+    # gather all options from env
+    context = dict([
+        (var[7:], value.decode("utf-8"))
+        for (var, value)
+        in os.environ.items()
+        if var.startswith("NOTIFY_")])
+
+    context['HOSTNOTES']       = os.environ.get("NAGIOS_HOSTNOTES")
+    context['HOSTNOTESURL']    = os.environ.get("NAGIOS_HOSTNOTESURL")
+    context['SERVICENOTES']    = os.environ.get("NAGIOS_SERVICENOTES")
+    context['SERVICENOTESURL'] = os.environ.get("NAGIOS_SERVICENOTESURL")
+
+    # Fetch graphs for this object. It first tries to detect how many sources
+    # are available for this object. Then it loops through all sources and
+    # fetches retrieves the images. If a problem occurs, it is printed to
+    # stderr (-> notify.log) and the graph is not added to the mail.
+    try:
+        num_sources = fetch_num_sources(context)
+    except GraphException, e:
+        sys.stderr.write('Unable to fetch graph infos: %s\n' % e)
+        num_sources = 0
+
+    # If argument 2 is given, we know the base url to the installation and can add
+    # links to hosts and services. ubercomfortable!
+    if context.get('PARAMETER_2'):
+        base_url = context['PARAMETER_2'].rstrip('/')
+        host_url = base_url + context['HOSTURL']
+
+        context['LINKEDHOSTNAME'] = '<a href="%s">%s</a>' % (host_url, context['HOSTNAME'])
+        context['HOSTLINK']       = '\nLink:     %s' % host_url
+
+        if context['WHAT'] == 'SERVICE':
+            service_url = base_url + context['SERVICEURL']
+            context['LINKEDSERVICEDESC'] = '<a href="%s">%s</a>' % (service_url, context['SERVICEDESC'])
+            context['SERVICELINK']       = '\nLink:     %s' % service_url
+    else:
+        context['LINKEDHOSTNAME']    = context['HOSTNAME']
+        context['LINKEDSERVICEDESC'] = context.get('SERVICEDESC', '')
+        context['HOSTLINK']          = ''
+        context['SERVICELINK']       = ''
+
+    attachments = []
+    graph_code = ''
+    for source in range(0, num_sources):
+        try:
+            content = fetch_graph(context, source)
+        except GraphException, e:
+            sys.stderr.write('Unable to fetch graph: %s\n' % e)
+            continue
+
+        if context['WHAT'] == 'HOST':
+            svc_desc = '_HOST_'
+        else:
+            svc_desc = context['SERVICEDESC'].replace(' ', '_')
+            # replace forbidden windows characters < > ? " : | \ / *
+            for token in ["<", ">", "?", "\"", ":", "|", "\\", "/", "*"] :
+                svc_desc = svc_desc.replace(token, "x%s" % ord(token))
+        name = '%s-%s-%d.png' % (context['HOSTNAME'], svc_desc, source)
+
+        attachments.append(('img', name, content, 'inline'))
+
+        context['GRAPH_%d' % source] = name
+        graph_code += '<img src="cid:%s" />' % name
+
+    if graph_code:
+        context['GRAPH_CODE'] = (
+            '<tr><th colspan=2>Graphs</th></tr>'
+            '<tr class="even0"><td colspan=2 class=graphs>%s</td></tr>' % graph_code
+        )
+    else:
+        context['GRAPH_CODE'] = ''
+
+    # Prepare the mail contents (also SUBJECT)
+    content_txt, content_html = prepare_contents(context)
+
+    # Create the mail and send it
+    m = multipart_mail(context['CONTACTEMAIL'], context['SUBJECT'], content_txt,
+                       content_html, attachments)
+    send_mail(m, context['CONTACTEMAIL'])
+
+main()

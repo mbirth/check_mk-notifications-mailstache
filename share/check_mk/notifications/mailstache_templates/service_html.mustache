@@ -1,0 +1,53 @@
+{{> head_html}}
+<table>
+<tr class="even0">
+    <th colspan=2>Object Information</th>
+</tr>
+<tr class="odd0">
+    <td class=left>Hostname</td>
+    <td>{{{LINKEDHOSTNAME}}} ({{HOSTALIAS}}){{#HOSTNOTESURL}} [<a href="{{HOSTNOTESURL}}">More info</a>]{{/HOSTNOTESURL}}</td>
+</tr>
+<tr class="even0">
+    <td class=left>Address</td>
+    <td>{{HOSTADDRESS}}</td>
+</tr>
+<tr class="odd0">
+    <td class=left>Service description</td>
+    <td>{{{LINKEDSERVICEDESC}}}{{#SERVICENOTESURL}} [<a href="{{SERVICENOTESURL}}">More info</a>]{{/SERVICENOTESURL}}</td>
+</tr>
+<tr>
+    <th colspan=2>State</th>
+</tr>
+<tr class="odd0">
+    <td class=left>State</td>
+    <td class="state">
+        <span class="state{{LASTSERVICESTATE}}">{{LASTSERVICESTATE}}</span> &rarr;
+        <span class="state{{SERVICESTATEID}}">{{SERVICESTATE}} ({{NOTIFICATIONTYPE}})</span>
+        since {{LASTSERVICESTATECHANGE_REL}}
+    </td>
+</tr>
+<tr class="even0">
+    <td class="left">Output</td>
+    <td>{{SERVICEOUTPUT}}</td>
+</tr>
+{{#LONGSERVICEOUTPUT}}
+    <tr class="odd0">
+        <td class="left">Long output</td>
+        <td>{{{LONGSERVICEOUTPUT}}}</td>
+    </tr>
+{{/LONGSERVICEOUTPUT}}
+{{#NOTIFICATIONCOMMENT}}
+    <tr>
+        <th colspan="2">Comment</th>
+    </tr>
+    <tr class="odd0">
+        <td class="left">Text</td>
+        <td>{{NOTIFICATIONCOMMENT}}</td>
+    </tr>
+    <tr class="even0">
+        <td class="left">Author</td>
+        <td>{{NOTIFICATIONAUTHORALIAS}} ({{NOTIFICATIONAUTHORNAME}})</td>
+    </tr>
+{{/NOTIFICATIONCOMMENT}}
+{{{GRAPH_CODE}}}
+{{> foot_html}}

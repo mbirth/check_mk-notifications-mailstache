@@ -1,0 +1,36 @@
+{{> head_html}}
+<table>
+<tr class="even0">
+    <th colspan=2>Object Information</th>
+</tr>
+<tr class="odd0">
+    <td class=left>Name</td>
+    <td>{{{LINKEDHOSTNAME}}} ({{HOSTALIAS}})</td>
+</tr>
+<tr class="even0">
+    <td class=left>Address</td>
+    <td>{{HOSTADDRESS}}</td>
+</tr>
+<tr>
+    <th colspan=2>State</th>
+</tr>
+<tr class="odd0">
+    <td class=left>State</td>
+    <td class="state">
+        <span class="hstate{{LASTHOSTSTATE}}">{{LASTHOSTSTATE}}</span> &rarr;
+        <span class="hstate{{HOSTSTATEID}}">{{HOSTSTATE}} ({{NOTIFICATIONTYPE}})</span>
+        since {{LASTHOSTSTATECHANGE_REL}}
+    </td>
+</tr>
+<tr class="even0">
+    <td class="left">Output</td>
+    <td>{{HOSTOUTPUT}}</td>
+</tr>
+{{#LONGHOSTOUTPUT}}
+<tr class="odd0">
+    <td class="left">Long output</td>
+    <td>{{{LONGHOSTOUTPUT}}}</td>
+</tr>
+{{/LONGHOSTOUTPUT}}
+{{{GRAPH_CODE}}}
+</table>{{> foot_html}}

@@ -1,0 +1,130 @@
+<html>
+<head>
+<title>{{SUBJECT}}</title>
+<style>
+body {
+    background-color: #426D8A;
+    padding: 5px;
+    font-family: arial,helvetica,sans-serif;
+    font-size: 10px;
+}
+table {
+    border-spacing: 0px;
+    border-collapse: collapse;
+    margin: 5px 0 0 0;
+    padding: 0;
+    width: 100%;
+    color: black;
+    empty-cells: show;
+}
+
+table th {
+    font-weight: normal;
+    border-right: 1px solid #ccc;
+    background-color: #999;
+    text-align: center;
+    color: #fff;
+    vertical-align: middle;
+    font-size: 9pt;
+    height: 14px;
+}
+table th:last-child {
+    border-right-style: none;
+}
+
+table tr > td {
+    border-right: 1px solid #ccc;
+    padding: 2px 4px;
+    height: 22px;
+    vertical-align: middle;
+}
+table tr td:last-child {
+    border-right-style: none;
+}
+
+/*
+table a {
+    text-decoration: none;
+    color: black;
+}
+table a:hover {
+    text-decoration: underline;
+}
+*/
+
+table tr td {
+    padding-bottom: 4px;
+    padding: 4px 5px 2px 5px;
+    text-align: left;
+    height: 16px;
+    line-height: 14px;
+    vertical-align: top;
+    font-size: 9pt;
+}
+table tr td.left {
+    width: 10%;
+    white-space: nowrap;
+    vertical-align: top;
+    padding-right: 20px;
+}
+table tr.even0 td.left {
+    background-color: #bbb;
+}
+table tr.odd0 td.left {
+    background-color: #ccc;
+}
+
+tr.odd0  { background-color: #eee; }
+tr.even0 { background-color: #ddd; }
+
+td.odd0  { background-color: #eee; }
+td.even0 { background-color: #ddd; }
+
+tr.odd1  { background-color: #ffc; }
+tr.even1 { background-color: #ffa; }
+
+tr.odd2  { background-color: #fcc; }
+tr.even2 { background-color: #faa; }
+
+tr.odd3  { background-color: #ffe0a0; }
+tr.even3 { background-color: #ffefaf; }
+
+td.state {
+    font-weight: bold;
+}
+
+.state0, .stateOK, .hstate0, .hstateUP, .state0 a, .hstate0 a {
+    background-color: #0b3; color: #fff;
+}
+
+.state1, .stateWARNING, .state1 a, tr.groupheader td.state1 {
+        background-color: #ff0; color: #000;
+}
+
+.state2, .stateCRITICAL, .hstate1, .hstateDOWN, .state2 a, .hstate2 a {
+        background-color: #f00; color: #fff;
+}
+
+.state3, .stateUNKNOWN, .hstate2, .hstateUNREACHABLE, .state3 a, .hstate2 a {
+        background-color: #f80; color: #fff;
+}
+
+.statep, .statePENDING, .hstatep, .hstatePENDING, .statep a, .hstatep a {
+        background-color: #888; color: #fff;
+}
+
+.stated, .stateDOWNTIME, .hstated, .hstateDOWNTIME, .stated a, .hstated a {
+        background-color: #0af; color: #fff;
+}
+
+td.graphs {
+    width: 617px;
+    padding: 10px;
+}
+
+img {
+    margin-right: 10px;
+}
+</style>
+</head>
+<body>

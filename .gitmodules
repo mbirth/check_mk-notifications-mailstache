@@ -1,0 +1,3 @@
+[submodule "lib/external/pystache"]
+	path = lib/external/pystache
+	url = https://github.com/defunkt/pystache.git
