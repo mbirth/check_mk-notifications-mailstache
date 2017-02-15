@@ -54,4 +54,24 @@
     </tr>
 {{/HOSTCUSTOMNOTES}}
 {{{GRAPH_CODE}}}
-</table>{{> foot_html}}
+</table>
+{{#HOST_URL}}
+<script type="application/ld+json">
+{
+  "@context": "http://schema.org",
+    "@type": "EmailMessage",
+    "description": "Host {{HOSTNAME}} is {{HOSTSTATE}}",
+  "potentialAction": {
+    "@type": "ViewAction",
+    "target": "{{HOST_URL}}",
+    "name": "Show host"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Check_MK",
+    "url": "{{BASE_URL}}"
+  }
+}
+</script>
+{{/HOST_URL}}
+{{> foot_html}}

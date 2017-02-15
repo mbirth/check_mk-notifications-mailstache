@@ -216,11 +216,14 @@ def main():
         base_url = context['PARAMETER_2'].rstrip('/')
         host_url = base_url + context['HOSTURL']
 
+        context['BASE_URL']       = context['PARAMETER_2']
+        context['HOST_URL']       = host_url
         context['LINKEDHOSTNAME'] = '<a href="%s">%s</a>' % (host_url, context['HOSTNAME'])
         context['HOSTLINK']       = '\nLink:     %s' % host_url
 
         if context['WHAT'] == 'SERVICE':
             service_url = base_url + context['SERVICEURL']
+            context['SERVICE_URL']       = service_url
             context['LINKEDSERVICEDESC'] = '<a href="%s">%s</a>' % (service_url, context['SERVICEDESC'])
             context['SERVICELINK']       = '\nLink:     %s' % service_url
     else:

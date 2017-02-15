@@ -69,4 +69,23 @@
     </tr>
 {{/SERVICECUSTOMNOTES}}
 {{{GRAPH_CODE}}}
+{{#SERVICE_URL}}
+<script type="application/ld+json">
+{
+  "@context": "http://schema.org",
+  "@type": "EmailMessage",
+  "description": "Service {{HOSTNAME}}/{{SERVICEDESC}} is {{SERVICESTATE}}",
+  "potentialAction": {
+    "@type": "ViewAction",
+    "target": "{{SERVICE_URL}}",
+    "name": "Show service"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Check_MK",
+    "url": "{{BASE_URL}}"
+  }
+}
+</script>
+{{/SERVICE_URL}}
 {{> foot_html}}
