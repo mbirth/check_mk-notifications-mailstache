@@ -26,13 +26,13 @@ def prepare_contents(context):
     ])
 
     if context['WHAT'] == 'HOST':
-        tmpl_subj = renderer.load_template("host_subject")
-        tmpl_txt  = renderer.load_template("host_txt")
-        tmpl_html = renderer.load_template("host_html")
+        tmpl_subj = renderer.load_template("host_subject").decode("utf-8")
+        tmpl_txt  = renderer.load_template("host_txt").decode("utf-8")
+        tmpl_html = renderer.load_template("host_html").decode("utf-8")
     else:
-        tmpl_subj = renderer.load_template("service_subject")
-        tmpl_txt  = renderer.load_template("service_txt")
-        tmpl_html = renderer.load_template("service_html")
+        tmpl_subj = renderer.load_template("service_subject").decode("utf-8")
+        tmpl_txt  = renderer.load_template("service_txt").decode("utf-8")
+        tmpl_html = renderer.load_template("service_html").decode("utf-8")
 
     context["SUBJECT"] = renderer.render(tmpl_subj, context)
 
@@ -82,6 +82,8 @@ def multipart_mail(target, subject, content_txt, content_html, attach = []):
 def send_mail(m, target):
     p = subprocess.Popen(["/usr/sbin/sendmail", "-i", target ], stdin = subprocess.PIPE)
     p.communicate(m.as_string())
+    #with open("/tmp/mailout.eml", "wt") as f:
+    #    f.write(m.as_string())
     return True
 
 def fetch_pnp_data(context, params):
@@ -157,16 +159,16 @@ def get_custom_notes(context):
         if context.get('PARAMETER_2'):
             base_url = context['PARAMETER_2'].rstrip('/')
         return text\
-            .replace('$URL_PREFIX$',     base_url)\
-            .replace('$SITE$',           context['OMD_SITE'])\
-            .replace('$HOSTNAME$',       host)\
-            .replace('$HOSTNAME_LOWER$', host.lower())\
-            .replace('$HOSTNAME_UPPER$', host.upper())\
-            .replace('$HOSTNAME_TITLE$', host[0].upper() + host[1:].lower())\
-            .replace('$HOSTADDRESS$',    context['HOSTADDRESS'])\
-            .replace('$SERVICEOUTPUT$',  context.get('SERVICEOUTPUT', ""))\
-            .replace('$HOSTOUTPUT$',     context.get('HOSTOUTPUT', ""))\
-            .replace('$SERVICEDESC$',    context.get('SERVICEDESC', ""))
+            .replace(u'$URL_PREFIX$',     base_url)\
+            .replace(u'$SITE$',           context['OMD_SITE'])\
+            .replace(u'$HOSTNAME$',       host)\
+            .replace(u'$HOSTNAME_LOWER$', host.lower())\
+            .replace(u'$HOSTNAME_UPPER$', host.upper())\
+            .replace(u'$HOSTNAME_TITLE$', host[0].upper() + host[1:].lower())\
+            .replace(u'$HOSTADDRESS$',    context['HOSTADDRESS'])\
+            .replace(u'$SERVICEOUTPUT$',  context.get('SERVICEOUTPUT', ""))\
+            .replace(u'$HOSTOUTPUT$',     context.get('HOSTOUTPUT', ""))\
+            .replace(u'$SERVICEDESC$',    context.get('SERVICEDESC', ""))
 
     contents_host = []
     contents_svc  = []
@@ -186,15 +188,19 @@ def get_custom_notes(context):
 def main():
     # gather all options from env
     context = dict([
-        (var[7:], value.decode("utf-8"))
+        (var[7:], os.environ.get(var))
         for (var, value)
         in os.environ.items()
         if var.startswith("NOTIFY_")])
 
-    context['HOSTNOTES']       = os.environ.get("NAGIOS_HOSTNOTES")
-    context['HOSTNOTESURL']    = os.environ.get("NAGIOS_HOSTNOTESURL")
-    context['SERVICENOTES']    = os.environ.get("NAGIOS_SERVICENOTES")
-    context['SERVICENOTESURL'] = os.environ.get("NAGIOS_SERVICENOTESURL")
+    context['HOSTNOTES']       = os.environ.get("NAGIOS_HOSTNOTES").decode("utf-8")
+    context['HOSTNOTESURL']    = os.environ.get("NAGIOS_HOSTNOTESURL").decode("utf-8")
+    context['SERVICENOTES']    = os.environ.get("NAGIOS_SERVICENOTES").decode("utf-8")
+    context['SERVICENOTESURL'] = os.environ.get("NAGIOS_SERVICENOTESURL").decode("utf-8")
+    context['HOSTOUTPUT']      = os.environ.get("NAGIOS_HOSTOUTPUT").decode("utf-8")
+    context['SERVICEOUTPUT']   = os.environ.get("NAGIOS_SERVICEOUTPUT").decode("utf-8")
+    context['LONGHOSTOUTPUT']  = os.environ.get("NAGIOS_LONGHOSTOUTPUT").decode("utf-8")
+    context['LONGSERVICEOUTPUT'] = os.environ.get("NAGIOS_LONGSERVICEOUTPUT").decode("utf-8")
 
     notes = get_custom_notes(context)
     context['HOSTCUSTOMNOTES'] = notes["HOST"]
